@@ -103,8 +103,8 @@ export const KmReportsView: React.FC<KmReportsViewProps> = ({
 
   // Compute daily breakdown for chart
   const dailyBreakdown = useMemo(() => {
-    return getDailyKmBreakdown(trips, startDate, endDate);
-  }, [trips, startDate, endDate]);
+    return getDailyKmBreakdown(trips, startDate, endDate, vehicles);
+  }, [trips, startDate, endDate, vehicles]);
 
   // Filtered and searched trips for table
   const displayedTrips = useMemo(() => {
@@ -157,7 +157,7 @@ export const KmReportsView: React.FC<KmReportsViewProps> = ({
 
   const selectedVehicleName =
     selectedVehicleId === 'all'
-      ? 'All 3 Vehicles'
+      ? `All ${vehicles.length} Vehicles`
       : vehicles.find((v) => v.id === selectedVehicleId)?.nickName || 'Selected Vehicle';
 
   return (
@@ -451,10 +451,10 @@ export const KmReportsView: React.FC<KmReportsViewProps> = ({
           <div>
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Truck className="w-4 h-4 text-amber-600" />
-              KM Range Distribution by Vehicle (3 Hired Vehicles)
+              KM Range Distribution by Vehicle ({vehicles.length} Units)
             </h3>
             <p className="text-xs text-slate-500">
-              Side-by-side comparison for Mahindra Bolero (Unit 1 & 2) and Mahindra Camper
+              Side-by-side operational distance and fuel distribution across active fleet vehicles
             </p>
           </div>
           <span className="text-xs font-mono text-slate-500">
@@ -462,9 +462,10 @@ export const KmReportsView: React.FC<KmReportsViewProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {stats.vehicleBreakdown.map((vb) => {
-            const isCamper = vb.model === 'Mahindra Camper';
+            const vehicleObj = vehicles.find((v) => v.id === vb.vehicleId);
+            const barColor = vehicleObj?.color || (vb.model.toLowerCase().includes('camper') ? '#f59e0b' : '#0284c7');
 
             return (
               <div
@@ -486,10 +487,11 @@ export const KmReportsView: React.FC<KmReportsViewProps> = ({
                 {/* Progress bar */}
                 <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
                   <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      isCamper ? 'bg-amber-500' : vb.regNumber.includes('4821') ? 'bg-sky-500' : 'bg-emerald-500'
-                    }`}
-                    style={{ width: `${Math.max(5, vb.percentageOfTotalKm)}%` }}
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${Math.max(5, vb.percentageOfTotalKm)}%`,
+                      backgroundColor: barColor,
+                    }}
                   ></div>
                 </div>
 
@@ -601,21 +603,36 @@ export const KmReportsView: React.FC<KmReportsViewProps> = ({
           <div className="relative pt-6 pb-2 overflow-x-auto">
             {/* Hover Tooltip */}
             {hoveredBar && (
-              <div className="absolute top-0 right-4 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 shadow-md pointer-events-none z-10 flex items-center gap-3">
+              <div className="absolute top-0 right-4 bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 shadow-md pointer-events-none z-10 flex flex-wrap items-center gap-2 max-w-md">
                 <span className="font-bold text-amber-700">{hoveredBar.date}:</span>
                 <span>Total: <strong>{hoveredBar.totalKm} KM</strong></span>
-                <span className="text-sky-700 font-mono">B1: {hoveredBar.bolero1Km}k</span>
-                <span className="text-emerald-700 font-mono">B2: {hoveredBar.bolero2Km}k</span>
-                <span className="text-amber-700 font-mono">C: {hoveredBar.camperKm}k</span>
+                {vehicles.map((v) => {
+                  const km =
+                    hoveredBar.vehicleKmMap?.[v.id] ??
+                    (v.id === 'veh-bolero-1'
+                      ? hoveredBar.bolero1Km
+                      : v.id === 'veh-bolero-2'
+                      ? hoveredBar.bolero2Km
+                      : v.id === 'veh-camper-1'
+                      ? hoveredBar.camperKm
+                      : 0);
+                  if (!km) return null;
+                  return (
+                    <span
+                      key={v.id}
+                      className="font-mono text-[11px] font-semibold"
+                      style={{ color: v.color || '#0284c7' }}
+                    >
+                      {v.nickName.split(' ')[0]}: {km}k
+                    </span>
+                  );
+                })}
               </div>
             )}
 
             <div className="min-w-[580px] h-48 flex items-end gap-2 sm:gap-3 px-2 border-b border-slate-200">
               {dailyBreakdown.map((item, idx) => {
                 const heightPct = Math.min(100, Math.max(8, (item.totalKm / maxDayKm) * 100));
-                const b1Pct = item.totalKm > 0 ? (item.bolero1Km / item.totalKm) * 100 : 0;
-                const b2Pct = item.totalKm > 0 ? (item.bolero2Km / item.totalKm) * 100 : 0;
-                const camPct = item.totalKm > 0 ? (item.camperKm / item.totalKm) * 100 : 0;
 
                 return (
                   <div
@@ -633,27 +650,27 @@ export const KmReportsView: React.FC<KmReportsViewProps> = ({
                       className="w-full max-w-[28px] rounded-t-md overflow-hidden flex flex-col-reverse transition-all duration-300 group-hover:brightness-95"
                       style={{ height: `${heightPct}%` }}
                     >
-                      {item.camperKm > 0 && (
-                        <div
-                          className="bg-amber-500 w-full"
-                          style={{ height: `${camPct}%` }}
-                          title={`Camper: ${item.camperKm} km`}
-                        ></div>
-                      )}
-                      {item.bolero2Km > 0 && (
-                        <div
-                          className="bg-emerald-500 w-full"
-                          style={{ height: `${b2Pct}%` }}
-                          title={`Bolero 2: ${item.bolero2Km} km`}
-                        ></div>
-                      )}
-                      {item.bolero1Km > 0 && (
-                        <div
-                          className="bg-sky-500 w-full"
-                          style={{ height: `${b1Pct}%` }}
-                          title={`Bolero 1: ${item.bolero1Km} km`}
-                        ></div>
-                      )}
+                      {vehicles.map((v) => {
+                        const km =
+                          item.vehicleKmMap?.[v.id] ??
+                          (v.id === 'veh-bolero-1'
+                            ? item.bolero1Km
+                            : v.id === 'veh-bolero-2'
+                            ? item.bolero2Km
+                            : v.id === 'veh-camper-1'
+                            ? item.camperKm
+                            : 0);
+                        if (!km || item.totalKm <= 0) return null;
+                        const pct = (km / item.totalKm) * 100;
+                        return (
+                          <div
+                            key={v.id}
+                            className="w-full transition-all"
+                            style={{ height: `${pct}%`, backgroundColor: v.color || '#0284c7' }}
+                            title={`${v.nickName}: ${km} km`}
+                          />
+                        );
+                      })}
                     </div>
 
                     <div className="text-[10px] text-slate-500 mt-2 font-mono group-hover:text-slate-800">

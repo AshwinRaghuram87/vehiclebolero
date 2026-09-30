@@ -468,10 +468,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div>
             <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
               <Truck className="w-5 h-5 text-amber-600" />
-              Assigned Hired Vehicles (3 Units)
+              Assigned Hired Vehicles ({vehicles.length} Units)
             </h2>
             <p className="text-xs text-slate-500">
-              2 Mahindra Bolero passenger cabs & 1 Mahindra Camper utility vehicle
+              Active commercial and utility fleet hired for Sandur to Donimalai transit operations
             </p>
           </div>
           <button
@@ -483,15 +483,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {vehicles.map((v) => {
-            const isCamper = v.model === 'Mahindra Camper';
+            const isCamper = v.model.toLowerCase().includes('camper') || v.model.toLowerCase().includes('yodha');
             const vTrips = trips.filter((t) => t.vehicleId === v.id);
             const latestTrip = vTrips[0];
             const vTodayTrips = todayTrips.filter((t) => t.vehicleId === v.id);
             const vTodayKm = vTodayTrips.reduce((acc, t) => acc + t.totalKm, 0);
             const vTotalFuel = vTrips.reduce((acc, t) => acc + (t.fuelLitres || 0), 0);
             const vTotalFuelCost = vTrips.reduce((acc, t) => acc + (t.fuelCost || 0), 0);
+            const vColor = v.color || '#0284c7';
 
             return (
               <div
@@ -503,13 +504,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold ${
-                          isCamper
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                            : v.regNumber.includes('4821')
-                            ? 'bg-sky-50 text-sky-700 border border-sky-200'
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        }`}
+                        className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white shadow-xs"
+                        style={{ backgroundColor: vColor }}
                       >
                         {isCamper ? <Truck className="w-6 h-6" /> : <Car className="w-6 h-6" />}
                       </div>

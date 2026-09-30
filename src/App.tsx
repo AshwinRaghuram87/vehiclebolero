@@ -175,6 +175,25 @@ export default function App() {
     setVehicles(updated);
   };
 
+  // Add new vehicle to fleet
+  const handleAddVehicle = (vehicleData: Omit<Vehicle, 'id'>) => {
+    const slug = vehicleData.model.toLowerCase().includes('camper')
+      ? 'camper'
+      : vehicleData.model.toLowerCase().includes('scorpio')
+      ? 'scorpio'
+      : 'bolero';
+    const newVehicle: Vehicle = {
+      ...vehicleData,
+      id: `veh-${slug}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    };
+    setVehicles((prev) => [...prev, newVehicle]);
+  };
+
+  // Delete vehicle
+  const handleDeleteVehicle = (vehicleId: string) => {
+    setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+  };
+
   // Open trip modal for a specific vehicle
   const handleOpenTripModalWithVehicle = (vehicleId: string) => {
     setEditingTrip(null);
@@ -265,7 +284,10 @@ export default function App() {
             vehicles={vehicles}
             trips={trips}
             onUpdateVehicle={handleUpdateVehicle}
+            onAddVehicle={handleAddVehicle}
+            onDeleteVehicle={handleDeleteVehicle}
             onOpenTripModalWithVehicle={handleOpenTripModalWithVehicle}
+            onOpenAddFuelModal={handleOpenAddFuelModal}
           />
         )}
       </main>
@@ -307,7 +329,7 @@ export default function App() {
           </div>
 
           <div className="flex items-center space-x-4 text-slate-500">
-            <span>3 Hired Vehicles: 2 Mahindra Bolero & 1 Mahindra Camper</span>
+            <span>{vehicles.length} Hired Units in Fleet Profile</span>
             <span>•</span>
             <span className="font-mono">Local Data Persisted</span>
           </div>

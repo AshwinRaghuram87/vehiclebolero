@@ -100,18 +100,40 @@ export const calculateReportStats = (
   };
 };
 
+export interface DailyKmBreakdownItem {
+  date: string;
+  displayDate: string;
+  totalKm: number;
+  bolero1Km: number;
+  bolero2Km: number;
+  camperKm: number;
+  vehicleKmMap: Record<string, number>;
+}
+
 export const getDailyKmBreakdown = (
   trips: TripLog[],
   startDate: string,
-  endDate: string
-): { date: string; displayDate: string; totalKm: number; bolero1Km: number; bolero2Km: number; camperKm: number }[] => {
+  endDate: string,
+  vehicles?: Vehicle[]
+): DailyKmBreakdownItem[] => {
   // Build map of dates
-  const map = new Map<string, { totalKm: number; bolero1Km: number; bolero2Km: number; camperKm: number }>();
+  const map = new Map<
+    string,
+    { totalKm: number; bolero1Km: number; bolero2Km: number; camperKm: number; vehicleKmMap: Record<string, number> }
+  >();
 
   trips.forEach((t) => {
     if (isDateInRange(t.date, startDate, endDate)) {
-      const cur = map.get(t.date) || { totalKm: 0, bolero1Km: 0, bolero2Km: 0, camperKm: 0 };
+      const cur = map.get(t.date) || {
+        totalKm: 0,
+        bolero1Km: 0,
+        bolero2Km: 0,
+        camperKm: 0,
+        vehicleKmMap: {},
+      };
       cur.totalKm += t.totalKm;
+      cur.vehicleKmMap[t.vehicleId] = (cur.vehicleKmMap[t.vehicleId] || 0) + t.totalKm;
+
       if (t.vehicleId === 'veh-bolero-1') cur.bolero1Km += t.totalKm;
       else if (t.vehicleId === 'veh-bolero-2') cur.bolero2Km += t.totalKm;
       else if (t.vehicleId === 'veh-camper-1') cur.camperKm += t.totalKm;
@@ -130,6 +152,7 @@ export const getDailyKmBreakdown = (
       bolero1Km: entry.bolero1Km,
       bolero2Km: entry.bolero2Km,
       camperKm: entry.camperKm,
+      vehicleKmMap: entry.vehicleKmMap,
     };
   });
 };

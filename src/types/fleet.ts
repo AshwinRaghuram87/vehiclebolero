@@ -1,4 +1,11 @@
-export type VehicleModelType = 'Mahindra Bolero' | 'Mahindra Camper';
+export type VehicleModelType =
+  | 'Mahindra Bolero'
+  | 'Mahindra Camper'
+  | 'Mahindra Scorpio'
+  | 'Tata Xenon / Yodha'
+  | 'Force Trax'
+  | 'Other Hired Vehicle'
+  | (string & {});
 
 export type OperationalSite = 'DIOM' | 'KIOM' | 'PPT' | 'Admin Building';
 
@@ -46,7 +53,7 @@ export interface Vehicle {
   currentOdometer: number; // KM
   contractRatePerKm: number; // e.g. ₹15 / km
   monthlyFixedRate: number; // e.g. ₹35,000 / month if hired on monthly basis
-  fuelType: 'Diesel';
+  fuelType: 'Diesel' | 'Petrol' | 'EV' | 'CNG';
   status: 'Active' | 'On Trip' | 'Maintenance' | 'Standby';
   color: string;
   tag: string;

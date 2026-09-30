@@ -124,7 +124,7 @@ export const MonthlyFuelReportView: React.FC<MonthlyFuelReportViewProps> = ({
             <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
               Summarizing diesel consumption, round figure expenses, exact fuel calculated at{' '}
               <strong className="text-orange-600 font-mono">₹100.04 per litre</strong>, and mileage
-              for each of the 3 Mahindra vehicles.
+              for each of the {vehicles.length} fleet vehicles.
             </p>
           </div>
 
