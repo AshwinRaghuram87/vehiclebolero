@@ -1,0 +1,6 @@
+{
+  "name": "Sandur - Donimalai Hired Vehicle Trip Log & Fleet Monitor",
+  "description": "Daily trip logger, odometer tracker, and date-range mileage reporting system for office hired vehicles (Mahindra Bolero & Camper) between Sandur and Donimalai.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
