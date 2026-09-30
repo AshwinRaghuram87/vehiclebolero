@@ -8,6 +8,8 @@ import {
   getStoredFuelLogs,
   saveStoredFuelLogs,
   resetAllData,
+  clearAllProductionData,
+  loadSampleDemoData,
   updateVehicleOdometer,
 } from './utils/storage';
 import { Navbar } from './components/Navbar';
@@ -202,13 +204,31 @@ export default function App() {
     setIsTripModalOpen(true);
   };
 
-  // Reset to default sample demo data
-  const handleResetData = () => {
-    if (window.confirm('Reset all trip logs, fuel logs, and vehicles to standard Sandur-Donimalai sample data?')) {
-      const reset = resetAllData();
-      setVehicles(reset.vehicles);
-      setTrips(reset.trips);
-      setFuelLogs(reset.fuelLogs);
+  // Clear all data for production deployment
+  const handleClearAllProductionData = () => {
+    if (
+      window.confirm(
+        'Delete all data for production?\n\nThis will remove all trip logs and fuel logs, and reset vehicle odometers to their initial baseline for fresh operational tracking.'
+      )
+    ) {
+      const cleared = clearAllProductionData();
+      setVehicles(cleared.vehicles);
+      setTrips(cleared.trips);
+      setFuelLogs(cleared.fuelLogs);
+    }
+  };
+
+  // Load sample demo data for demonstration/evaluation
+  const handleLoadDemoData = () => {
+    if (
+      window.confirm(
+        'Load sample demo trips & fuel records? This will populate the logbook with realistic test data.'
+      )
+    ) {
+      const demo = loadSampleDemoData();
+      setVehicles(demo.vehicles);
+      setTrips(demo.trips);
+      setFuelLogs(demo.fuelLogs);
     }
   };
 
@@ -225,7 +245,10 @@ export default function App() {
           setIsTripModalOpen(true);
         }}
         onOpenAddFuelModal={() => handleOpenAddFuelModal()}
-        onResetData={handleResetData}
+        onClearAllData={handleClearAllProductionData}
+        onLoadDemoData={handleLoadDemoData}
+        tripsCount={trips.length}
+        fuelCount={fuelLogs.length}
         vehicles={vehicles}
       />
 

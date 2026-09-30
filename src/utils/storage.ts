@@ -1,8 +1,19 @@
 import { Vehicle, TripLog, FuelLog, DEFAULT_DIESEL_PRICE } from '../types/fleet';
 
-const VEHICLES_STORAGE_KEY = 'sandur_donimalai_vehicles_v1';
-const TRIPS_STORAGE_KEY = 'sandur_donimalai_trips_v1';
-const FUEL_STORAGE_KEY = 'sandur_donimalai_fuel_logs_v1';
+const VEHICLES_STORAGE_KEY = 'sandur_donimalai_vehicles_prod_v1';
+const TRIPS_STORAGE_KEY = 'sandur_donimalai_trips_prod_v1';
+const FUEL_STORAGE_KEY = 'sandur_donimalai_fuel_logs_prod_v1';
+
+// Automatically clean up old mock/sample data from previous test versions
+try {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    window.localStorage.removeItem('sandur_donimalai_vehicles_v1');
+    window.localStorage.removeItem('sandur_donimalai_trips_v1');
+    window.localStorage.removeItem('sandur_donimalai_fuel_logs_v1');
+  }
+} catch {
+  // Ignore in SSR / non-browser environments
+}
 
 export const INITIAL_VEHICLES: Vehicle[] = [
   {
@@ -14,7 +25,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     driverName: 'Basavaraj K.',
     driverPhone: '+91 94481 23411',
     initialOdometer: 54100,
-    currentOdometer: 54980,
+    currentOdometer: 54100,
     contractRatePerKm: 15,
     monthlyFixedRate: 38000,
     fuelType: 'Diesel',
@@ -31,7 +42,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     driverName: 'Manjunath S.',
     driverPhone: '+91 98450 78219',
     initialOdometer: 48200,
-    currentOdometer: 48944,
+    currentOdometer: 48200,
     contractRatePerKm: 15,
     monthlyFixedRate: 38000,
     fuelType: 'Diesel',
@@ -48,7 +59,7 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     driverName: 'Ramesh Naik',
     driverPhone: '+91 97312 44520',
     initialOdometer: 39150,
-    currentOdometer: 39860,
+    currentOdometer: 39150,
     contractRatePerKm: 17,
     monthlyFixedRate: 42000,
     fuelType: 'Diesel',
@@ -752,18 +763,17 @@ export const getStoredTripLogs = (): TripLog[] => {
   try {
     const raw = localStorage.getItem(TRIPS_STORAGE_KEY);
     if (!raw) {
-      const initial = sanitizeTrips(generateSampleTrips());
-      localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(initial));
-      return initial;
+      localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify([]));
+      return [];
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
       return sanitizeTrips(parsed);
     }
-    return sanitizeTrips(generateSampleTrips());
+    return [];
   } catch (err) {
     console.error('Failed to load trip logs from storage:', err);
-    return sanitizeTrips(generateSampleTrips());
+    return [];
   }
 };
 
@@ -1005,18 +1015,17 @@ export const getStoredFuelLogs = (): FuelLog[] => {
   try {
     const raw = localStorage.getItem(FUEL_STORAGE_KEY);
     if (!raw) {
-      const initial = generateSampleFuelLogs();
-      localStorage.setItem(FUEL_STORAGE_KEY, JSON.stringify(initial));
-      return initial;
+      localStorage.setItem(FUEL_STORAGE_KEY, JSON.stringify([]));
+      return [];
     }
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       return parsed;
     }
-    return generateSampleFuelLogs();
+    return [];
   } catch (err) {
     console.error('Failed to load fuel logs from storage:', err);
-    return generateSampleFuelLogs();
+    return [];
   }
 };
 
@@ -1028,15 +1037,51 @@ export const saveStoredFuelLogs = (logs: FuelLog[]): void => {
   }
 };
 
+/**
+ * Clears all trip logs, fuel logs, and resets vehicle odometers to their initial baseline for production deployment.
+ */
+export const clearAllProductionData = (): { vehicles: Vehicle[]; trips: TripLog[]; fuelLogs: FuelLog[] } => {
+  try {
+    localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify([]));
+    localStorage.setItem(FUEL_STORAGE_KEY, JSON.stringify([]));
+    const currentVehicles = getStoredVehicles();
+    const cleanVehicles = currentVehicles.map((v) => ({
+      ...v,
+      currentOdometer: v.initialOdometer,
+    }));
+    localStorage.setItem(VEHICLES_STORAGE_KEY, JSON.stringify(cleanVehicles));
+    return { vehicles: cleanVehicles, trips: [], fuelLogs: [] };
+  } catch (err) {
+    console.error('Failed to clear production data:', err);
+    return { vehicles: INITIAL_VEHICLES, trips: [], fuelLogs: [] };
+  }
+};
+
+/**
+ * Loads realistic sample demo data for evaluation / testing purposes.
+ */
+export const loadSampleDemoData = (): { vehicles: Vehicle[]; trips: TripLog[]; fuelLogs: FuelLog[] } => {
+  try {
+    const sampleVehicles: Vehicle[] = [
+      { ...INITIAL_VEHICLES[0], currentOdometer: 54980 },
+      { ...INITIAL_VEHICLES[1], currentOdometer: 48944 },
+      { ...INITIAL_VEHICLES[2], currentOdometer: 39860 },
+    ];
+    const trips = generateSampleTrips();
+    const fuelLogs = generateSampleFuelLogs();
+    localStorage.setItem(VEHICLES_STORAGE_KEY, JSON.stringify(sampleVehicles));
+    localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
+    localStorage.setItem(FUEL_STORAGE_KEY, JSON.stringify(fuelLogs));
+    return { vehicles: sampleVehicles, trips, fuelLogs };
+  } catch (err) {
+    console.error('Failed to load sample demo data:', err);
+    return { vehicles: INITIAL_VEHICLES, trips: [], fuelLogs: [] };
+  }
+};
+
+/**
+ * Reset function defaults to production clear (clean slate).
+ */
 export const resetAllData = (): { vehicles: Vehicle[]; trips: TripLog[]; fuelLogs: FuelLog[] } => {
-  localStorage.removeItem(VEHICLES_STORAGE_KEY);
-  localStorage.removeItem(TRIPS_STORAGE_KEY);
-  localStorage.removeItem(FUEL_STORAGE_KEY);
-  const vehicles = INITIAL_VEHICLES;
-  const trips = generateSampleTrips();
-  const fuelLogs = generateSampleFuelLogs();
-  localStorage.setItem(VEHICLES_STORAGE_KEY, JSON.stringify(vehicles));
-  localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
-  localStorage.setItem(FUEL_STORAGE_KEY, JSON.stringify(fuelLogs));
-  return { vehicles, trips, fuelLogs };
+  return clearAllProductionData();
 };

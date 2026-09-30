@@ -228,7 +228,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 Month-to-Date KM
               </span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium border border-slate-200">
-                Sep 2026
+                {new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
               </span>
             </div>
 
@@ -728,54 +728,62 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {trips.slice(0, 6).map((t) => (
-                <tr key={t.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3 px-4 whitespace-nowrap font-bold text-slate-800">
-                    {formatDateDisplay(t.date)}
+              {trips.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                    No trips logged yet. Click &quot;Log Trip&quot; above to record your first transit run.
                   </td>
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    <span className="font-semibold text-slate-900">{t.vehicleModel}</span>{' '}
-                    <span className="font-mono text-[11px] text-slate-500">({t.vehicleReg})</span>
-                  </td>
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    <span
-                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
-                        t.destinationSite === 'DIOM'
-                          ? 'bg-rose-50 text-rose-700 border-rose-200'
-                          : t.destinationSite === 'KIOM'
-                          ? 'bg-purple-50 text-purple-700 border-purple-200'
-                          : t.destinationSite === 'PPT'
-                          ? 'bg-amber-50 text-amber-700 border-amber-200'
-                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      }`}
-                    >
-                      {t.destinationSite || 'DIOM'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 whitespace-nowrap text-slate-700">{t.driverName}</td>
-                  <td className="py-3 px-4 text-slate-700">
-                    {t.routeFrom} <span className="text-amber-600">⇄</span> {t.routeTo}
-                  </td>
-                  <td className="py-3 px-4 font-mono text-slate-700 whitespace-nowrap">
-                    {t.startKm} → {t.endKm}
-                  </td>
-                  <td className="py-3 px-4 whitespace-nowrap">
-                    <span className="px-2 py-0.5 rounded font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200">
-                      {t.totalKm} KM
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 whitespace-nowrap font-mono text-xs">
-                    {t.fuelLitres && t.fuelLitres > 0 ? (
-                      <span className="text-orange-700 font-semibold">
-                        {t.fuelLitres}L <span className="text-slate-500">({formatCurrency(t.fuelCost || 0)})</span>
-                      </span>
-                    ) : (
-                      <span className="text-slate-400">-</span>
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-slate-600 truncate max-w-[200px]">{t.purpose}</td>
                 </tr>
-              ))}
+              ) : (
+                trips.slice(0, 6).map((t) => (
+                  <tr key={t.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-4 whitespace-nowrap font-bold text-slate-800">
+                      {formatDateDisplay(t.date)}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="font-semibold text-slate-900">{t.vehicleModel}</span>{' '}
+                      <span className="font-mono text-[11px] text-slate-500">({t.vehicleReg})</span>
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span
+                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
+                          t.destinationSite === 'DIOM'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : t.destinationSite === 'KIOM'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : t.destinationSite === 'PPT'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}
+                      >
+                        {t.destinationSite || 'DIOM'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap text-slate-700">{t.driverName}</td>
+                    <td className="py-3 px-4 text-slate-700">
+                      {t.routeFrom} <span className="text-amber-600">⇄</span> {t.routeTo}
+                    </td>
+                    <td className="py-3 px-4 font-mono text-slate-700 whitespace-nowrap">
+                      {t.startKm} → {t.endKm}
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className="px-2 py-0.5 rounded font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200">
+                        {t.totalKm} KM
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 whitespace-nowrap font-mono text-xs">
+                      {t.fuelLitres && t.fuelLitres > 0 ? (
+                        <span className="text-orange-700 font-semibold">
+                          {t.fuelLitres}L <span className="text-slate-500">({formatCurrency(t.fuelCost || 0)})</span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-slate-600 truncate max-w-[200px]">{t.purpose}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

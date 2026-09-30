@@ -464,7 +464,14 @@ export const MonthlyFuelReportView: React.FC<MonthlyFuelReportViewProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredFuelLogs.map((log) => (
+              {filteredFuelLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-8 text-center text-slate-400">
+                    No diesel refill logs recorded yet. Click &quot;+ Add Fuel&quot; above to log your first slip.
+                  </td>
+                </tr>
+              ) : (
+                filteredFuelLogs.map((log) => (
                 <tr key={log.id} className="hover:bg-slate-50 transition-colors">
                   <td className="py-3 px-4 whitespace-nowrap">
                     <div className="font-bold text-slate-900">{formatDateDisplay(log.date)}</div>
@@ -509,7 +516,8 @@ export const MonthlyFuelReportView: React.FC<MonthlyFuelReportViewProps> = ({
                     </button>
                   </td>
                 </tr>
-              ))}
+              )))
+            }
             </tbody>
           </table>
         </div>
